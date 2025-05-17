@@ -29,7 +29,7 @@ Model 3 (M3) excels in this query again because counting employees is a simple \
 Surprisingly, Model 3 (M3) outperforms even for this update operation. While updating embedded documents within arrays requires array filters, MongoDB's optimization for array operations makes this approach more efficient than updating many separate documents. M1 performs the worst because it requires scanning and updating a separate collection with all person documents, while lacking the data locality benefits of the embedded models.
 
 \subsection*{4. Query 4 Performance}
-\textbf{Order queries from worst to best for Q4:} M1 < M2 < M3
+\textbf{Order queries from worst to best for Q4:} M2 < M3 < M1
 
 Model 3 (M3) again performs best because it only needs to update a single field in each company document, minimizing the number of documents that require modification. M2 must update the embedded company document in every person document, resulting in many more document updates. M1 performs the worst, requiring updating the company collection and potentially propagating those changes through references.
 
