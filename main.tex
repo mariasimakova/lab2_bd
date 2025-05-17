@@ -1,0 +1,31 @@
+% Here starts the preamble
+\documentclass[12pt]{article}
+\input{LaTex/packages}
+\input{LaTex/commands}
+
+\begin{document}
+\pdfbookmark[0]{Titel page}{Titel page}
+\begin{titlepage}
+	\centering
+	\includesvg[width=0.75\textwidth]{LaTex/imgs/BSE Barcelona Graduate School of Economics.svg}\par\vspace{0.75cm}
+	{\huge\bfseries Assignment~\nass\par}
+    {\large\bfseries Big Data Management - DSDM -~\gr\par}
+	\vspace{0.25cm}
+    \noindent\rule{\textwidth}{1pt}
+    {\Large Maria Simakova ()\par}
+	{\Large Moritz Peist (254017)\par}
+    \noindent\rule{\textwidth}{1pt}
+	\vfill
+    \tableofcontents
+    \vfill
+    % Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+
+% Contents
+\include*{LaTex/chapters/part1}
+
+\newpage
+\include{LaTex/appendix}
+
+\end{document}   
