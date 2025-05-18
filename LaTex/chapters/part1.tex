@@ -1,15 +1,6 @@
-\section{Lab Statement}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{C Results and Discussion}
 
-\section{Python Implementation}
-
-The solution code can be found in a comprehensive Jupyter notebook under \verb|\lab2\lab2.ipynb|.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Results and Discussion}
-
-The following section discusses the query results for each model (cf. \tableref{tab:model_comparison}):
+The following section discusses the query results for each model. \tableref{tab:model_comparison} showcases our performance run results:\footnote{All performance results presented depend entirely on our specific query implementations. Different query strategies or optimizations might yield different relative performance across models. These findings should be interpreted as specific to our implementation rather than as universal MongoDB performance principles.} 
 
 \input{results/model_comparison}
 
@@ -24,35 +15,30 @@ Model 3 (M3) performs best because it centralizes all employee data within each 
 Model 3 (M3) excels in this query again because counting employees is a simple \texttt{\$size} operator applied to the \texttt{staff} array--an O(1) operation requiring minimal computation. The M2 approach requires aggregation with \texttt{\$group} and \texttt{\$sum} operations, which are more resource-intensive. M1 performs worst as it needs both grouping operations and a costly \texttt{\$lookup} to join with company information.
 
 \subsection*{3. Query 3 Performance}
-\textbf{Order queries from worst to best for Q3:} M1 < M2 < M3
+\textbf{Order queries from worst to best for Q3:} M2 $\leq$ M1 < M3
 
-Surprisingly, Model 3 (M3) outperforms even for this update operation. While updating embedded documents within arrays requires array filters, MongoDB's optimization for array operations makes this approach more efficient than updating many separate documents. M1 performs the worst because it requires scanning and updating a separate collection with all person documents, while lacking the data locality benefits of the embedded models.
+Model 3 (M3) outperforms again. While updating embedded documents within arrays requires array filters, MongoDB's optimization for array operations makes this approach more efficient than updating many separate documents. Models M1 and M2 perform similarly since both require updating the same number of individual person-documents with identical operations. The main difference is that M1 updates standalone person documents while M2 updates person documents with embedded company data.
 
 \subsection*{4. Query 4 Performance}
 \textbf{Order queries from worst to best for Q4:} M2 < M3 < M1
 
-Model 3 (M3) again performs best because it only needs to update a single field in each company document, minimizing the number of documents that require modification. M2 must update the embedded company document in every person document, resulting in many more document updates. M1 performs the worst, requiring updating the company collection and potentially propagating those changes through references.
+Model 1 (M1) performs best by updating only a small number of compact company documents. M3 is moderately efficient, updating the same number of documents as M1 but with a performance penalty because of their larger size, due to embedded employee arrays. M2 performs the worst, requiring updates across thousands of person documents containing embedded company information.
 
 \subsection*{5. Normalization vs. Denormalization in MongoDB}
 
-The consistent performance hierarchy (M3 > M2 > M1) across all query types demonstrates that MongoDB strongly favors denormalized data models with strategic embedding patterns. This reveals several key insights about MongoDB optimization:
-
+The performance results across query types reveal that MongoDB generally favors denormalized data models, but with important nuances:
 \begin{enumerate}
-    \item \textbf{Data Locality Principle:} MongoDB performs best when related data is physically stored together in the document, eliminating the need for joins or lookups. This explains why both embedded models (M2, M3) consistently outperform the normalized model (M1).
-    
-    \item \textbf{Embedding Direction Matters:} The embedding direction significantly impacts performance. Embedding many small entities (people) within fewer larger entities (companies) in M3 is more efficient than the reverse approach in M2. This pattern aligns with the natural one-to-many relationship between companies and employees.
-    
-    \item \textbf{Update Performance:} Contrary to traditional relational database principles where normalization helps with update performance, MongoDB can perform updates on embedded document arrays more efficiently than updating many separate documents, provided the schema is well-designed and the database is properly indexed.
-    
-    \item \textbf{Document Count Impact:} Having fewer documents with more embedded data (M3) consistently outperforms having many smaller documents (M1, M2), as it reduces the overall overhead of document retrieval and manipulation.
+    \item \textbf{Data Locality Principle:} For read operations (Q1, Q2), MongoDB performs best when related data is physically stored together, eliminating the need for joins or lookups. This explains why embedded models (M2, M3) outperform the normalized model (M1) for these queries.
+    \item \textbf{Embedding Direction Matters:} The embedding direction significantly impacts performance. Embedding many small entities (people) within fewer larger entities (companies) in M3 is more efficient than the reverse approach in M2 for most operations. This pattern aligns with the natural one-to-many relationship between companies and employees.
+    \item \textbf{Update Performance Trade-offs:} While M3 performed well for updates to person data (Q3), M1 excelled when updating company data (Q4). This demonstrates that normalized models can outperform denormalized ones when updates affect a small subset of documents and avoiding large document overhead is beneficial.
+    \item \textbf{Document Count vs. Size Impact:} Having fewer documents (M1, M3 for companies) outperforms having many documents (M2) for updates, but document size also matters—M1's smaller company documents updated faster than M3's larger ones with embedded arrays in Q4.
 \end{enumerate}
-
 For update operations specifically, the best performance comes from:
-
 \begin{itemize}
     \item Minimizing the total number of documents that need updating
-    \item Ensuring update operations can leverage MongoDB's optimized array operations when working with embedded documents
+    \item Considering document size and update frequency when deciding on the embedding strategy
+    \item Balancing between data locality benefits and update overhead costs
     \item Designing the schema to match the most common query and update patterns
 \end{itemize}
 
-Thus, we can conclude that MongoDB's document-oriented architecture favors denormalized data models with strategic embedding strategies aligning with application access patterns. The M3 model--embedding many people documents within fewer company documents—provides optimal balance for both read and write operations in this scenario. This contradicts the conventional wisdom from relational databases that updates perform better with normalized models.
+Thus, we can conclude that MongoDB's document-oriented architecture generally favors denormalized data models for read operations, but the optimal model depends on specific access patterns. The M3 model performs best for read operations and person-focused updates, while M1 excels at company-level updates. This demonstrates that, unlike the simplistic \enquote{always denormalize} advice, MongoDB requires thoughtful schema design that considers both read and write patterns to achieve optimal performance.
