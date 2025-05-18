@@ -33,6 +33,7 @@ Lab2-Document-Stores/
 ├── Lab2-Assignment-Statement.pdf    # Original assignment description
 ├── README.md                        # This file
 ├── lab2.ipynb                       # Main Jupyter notebook with implementation
+├── L2-T05.pdf                       # Final submission PDF
 ├── code/
 │   └── archive.py                   # Helper code for verification
 ├── LaTex/                           # LaTeX files for report
